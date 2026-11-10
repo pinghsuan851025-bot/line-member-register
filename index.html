@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -5,80 +6,224 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>會員註冊</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f7f8;
-      padding: 20px;
+    * {
+      box-sizing: border-box;
     }
+
+    body {
+      font-family: Arial, "Noto Sans TC", sans-serif;
+      background: #F5F1E9;
+      margin: 0;
+      padding: 22px;
+      color: #514638;
+    }
+
     .container {
       max-width: 450px;
       margin: 30px auto;
-      background: white;
-      padding: 25px;
-      border-radius: 12px;
+      background: #FFFEFC;
+      padding: 30px 25px;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(90, 75, 55, 0.08);
+      border: 1px solid #E8DFD1;
     }
-    h2 { text-align: center; }
+
+    h2 {
+      text-align: center;
+      color: #78664C;
+      font-weight: 500;
+      letter-spacing: 3px;
+      margin-bottom: 25px;
+    }
+
     label {
       display: block;
       margin-top: 18px;
-      font-weight: bold;
+      font-weight: 600;
+      color: #665947;
     }
+
     input {
       width: 100%;
-      box-sizing: border-box;
-      padding: 12px;
+      padding: 13px;
       margin-top: 7px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+      border: 1px solid #DDD3C4;
+      border-radius: 7px;
       font-size: 16px;
+      background: #FFFEFC;
     }
+
+    input:focus {
+      outline: none;
+      border-color: #B59A6A;
+    }
+
     button {
       width: 100%;
-      padding: 14px;
-      margin-top: 25px;
-      background: #06c755;
+      padding: 15px;
+      margin-top: 28px;
+      background: #8B7655;
       color: white;
       border: none;
       border-radius: 7px;
-      font-size: 17px;
+      font-size: 16px;
+      letter-spacing: 2px;
+      cursor: pointer;
     }
+
     button:disabled {
-      background: #aaa;
+      background: #B8AE9F;
+      cursor: not-allowed;
     }
+
     #message {
       margin-top: 15px;
       padding: 12px;
-      background: #f1f5f5;
-      border-radius: 6px;
+      background: #F5F1E9;
+      border-radius: 7px;
       text-align: center;
+      color: #78664C;
       white-space: pre-wrap;
+    }
+
+    /* 註冊成功畫面 */
+    #successPage {
+      display: none;
+      text-align: center;
+      padding: 18px 5px 25px;
+    }
+
+    .success-icon {
+      width: 82px;
+      height: 82px;
+      margin: 0 auto 25px;
+      border: 1px solid #BBA477;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #927A50;
+      font-size: 42px;
+      font-weight: 300;
+    }
+
+    .success-en {
+      font-size: 18px;
+      letter-spacing: 2px;
+      color: #78664C;
+      margin-bottom: 13px;
+    }
+
+    .success-title {
+      font-size: 27px;
+      letter-spacing: 4px;
+      color: #927A50;
+      margin-bottom: 25px;
+    }
+
+    .success-divider {
+      width: 65px;
+      height: 1px;
+      background: #C9B58F;
+      margin: 0 auto 25px;
+    }
+
+    .success-welcome {
+      font-size: 19px;
+      color: #514638;
+      margin-bottom: 18px;
+    }
+
+    .success-description {
+      color: #766B5E;
+      line-height: 2;
+      font-size: 15px;
+      margin-bottom: 25px;
+    }
+
+    .success-label {
+      display: inline-block;
+      padding: 9px 25px;
+      border: 1px solid #C9B58F;
+      border-radius: 30px;
+      color: #927A50;
+      font-size: 14px;
+      letter-spacing: 2px;
+    }
+
+    .success-footer {
+      margin-top: 30px;
+      font-size: 12px;
+      color: #A08F78;
+      letter-spacing: 1px;
     }
   </style>
 </head>
 
 <body>
   <div class="container">
-    <h2>會員註冊</h2>
-    <div id="message">正在連接 LINE...</div>
 
-    <form id="registerForm">
-      <label>姓名</label>
-      <input type="text" id="name" required>
+    <div id="registerPage">
+      <h2>會員註冊</h2>
 
-      <label>Email</label>
-      <input type="email" id="email" required>
+      <div id="message">正在連接 LINE...</div>
 
-      <label>聯絡電話</label>
-      <input type="tel" id="phone" required>
+      <form id="registerForm">
+        <label>姓名</label>
+        <input type="text" id="name" required>
 
-      <label>職稱</label>
-      <input type="text" id="position" required>
+        <label>Email</label>
+        <input type="email" id="email" required>
 
-      <button type="submit" id="submitButton" disabled>
-        送出會員註冊
-      </button>
-    </form>
+        <label>聯絡電話</label>
+        <input type="tel" id="phone" required>
+
+        <label>職稱</label>
+        <input type="text" id="position" required>
+
+        <button type="submit" id="submitButton" disabled>
+          送出會員註冊
+        </button>
+      </form>
+    </div>
+
+    <!-- 註冊成功頁面 -->
+    <div id="successPage">
+
+      <div class="success-icon">✓</div>
+
+      <div class="success-en">
+        Registration Completed
+      </div>
+
+      <div class="success-title">
+        會員註冊成功
+      </div>
+
+      <div class="success-divider"></div>
+
+      <div class="success-welcome">
+        歡迎加入我們
+      </div>
+
+      <div class="success-description">
+        感謝您的信任與支持。<br>
+        您的會員資料已成功送出，<br>
+        期待未來為您提供更專業、完善的服務。
+      </div>
+
+      <div class="success-label">
+        會員註冊完成
+      </div>
+
+      <div class="success-footer">
+        Thank you for joining us.
+      </div>
+
+    </div>
+
   </div>
 
   <script>
@@ -168,8 +313,9 @@
             body: formData
           });
 
-          message.textContent =
-            '資料已送出，請確認 Google Sheets。';
+          // 隱藏註冊表單，顯示成功頁面
+          document.getElementById('registerPage').style.display = 'none';
+          document.getElementById('successPage').style.display = 'block';
 
         } catch (error) {
           console.error(error);
