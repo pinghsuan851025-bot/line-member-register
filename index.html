@@ -84,26 +84,39 @@
 
     let lineUserId = '';
 
-    async function initializeLiff() {
-      try {
-        await liff.init({ liffId: LIFF_ID });
+async function initializeLiff() {
+  try {
+    message.textContent = 'LIFF SDK 已載入，正在初始化...';
 
-        if (!liff.isLoggedIn()) {
-          message.textContent = '請先登入 LINE...';
-          liff.login();
-          return;
-        }
+    await liff.init({
+      liffId: LIFF_ID,
+      withLoginOnExternalBrowser: true
+    });
 
-        const profile = await liff.getProfile();
-        lineUserId = profile.userId;
+    message.textContent = 'LIFF 初始化完成，正在取得 LINE 資料...';
 
-        message.textContent = 'LINE 登入成功！請填寫會員資料。';
-        submitButton.disabled = false;
-
-      } catch (error) {
-        message.textContent = 'LINE 連線失敗：' + error.message;
-      }
+    if (!liff.isLoggedIn()) {
+      message.textContent = '尚未登入 LINE，請重新開啟 LIFF 網址。';
+      return;
     }
+
+    const profile = await liff.getProfile();
+
+    if (!profile || !profile.userId) {
+      throw new Error('無法取得 LINE User ID');
+    }
+
+    lineUserId = profile.userId;
+
+    message.textContent = 'LINE 登入成功！請填寫會員資料。';
+    submitButton.disabled = false;
+
+  } catch (error) {
+    console.error('LIFF Error:', error);
+    message.textContent = 'LINE 連線失敗：' + error.message;
+    submitButton.disabled = true;
+  }
+}
 
 document.getElementById('registerForm')
   .addEventListener('submit', async function(event) {
