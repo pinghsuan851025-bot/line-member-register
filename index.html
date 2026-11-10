@@ -43,6 +43,9 @@
       border-radius: 7px;
       font-size: 17px;
     }
+    button:disabled {
+      background: #aaa;
+    }
     #message {
       margin-top: 15px;
       padding: 12px;
@@ -53,6 +56,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <h2>會員註冊</h2>
@@ -79,106 +83,100 @@
 
   <script>
     const LIFF_ID = '2012517863-3AFi25Mo';
+
+    const SCRIPT_URL =
+      'https://script.google.com/macros/s/AKfycbwemprjyDop7k2qApymXTR1L-sa9nQN0rNIL6o-kt-EO4McSEKoanFjzacj2RDmdCAFhw/exec';
+
     const message = document.getElementById('message');
     const submitButton = document.getElementById('submitButton');
 
     let lineUserId = '';
 
-async function initializeLiff() {
-  try {
-    message.textContent = 'LIFF SDK 已載入，正在初始化...';
-
-    await liff.init({
-      liffId: LIFF_ID,
-      withLoginOnExternalBrowser: true
-    });
-
-    message.textContent = 'LIFF 初始化完成，正在取得 LINE 資料...';
-
-    if (!liff.isLoggedIn()) {
-      message.textContent = '尚未登入 LINE，請重新開啟 LIFF 網址。';
-      return;
-    }
-
-    const profile = await liff.getProfile();
-
-    if (!profile || !profile.userId) {
-      throw new Error('無法取得 LINE User ID');
-    }
-
-    lineUserId = profile.userId;
-
-    message.textContent = 'LINE 登入成功！請填寫會員資料。';
-    submitButton.disabled = false;
-
-  } catch (error) {
-    console.error('LIFF Error:', error);
-    message.textContent = 'LINE 連線失敗：' + error.message;
-    submitButton.disabled = true;
-  }
-}
-
-document.getElementById('registerForm')
-  .addEventListener('submit', async function(event) {
-    event.preventDefault();
-
-    if (!lineUserId) {
-      message.textContent = '尚未取得 LINE 使用者資料。';
-      return;
-    }
-
-    const data = {
-      lineUserId,
-      name: document.getElementById('name').value.trim(),
-      email: document.getElementById('email').value.trim(),
-      phone: document.getElementById('phone').value.trim(),
-      position: document.getElementById('position').value.trim()
-    };
-
-    if (!data.name || !data.email || !data.phone || !data.position) {
-      message.textContent = '請完整填寫所有資料。';
-      return;
-    }
-
-    submitButton.disabled = true;
-    message.textContent = '會員資料傳送中...';
-
-    try {
-      const formData = new URLSearchParams();
-      formData.append('payload', JSON.stringify(data));
-
-      await fetch(
-        'https://script.google.com/macros/s/AKfycbwemprjyDop7k2qApymXTR1L-sa9nQN0rNIL6o-kt-EO4McSEKoanFjzacj2RDmdCAFhw/exec',
-        {
-          method: 'POST',
-          mode: 'no-cors',
-          body: formData
+    async function initializeLiff() {
+      try {
+        if (typeof liff === 'undefined') {
+          throw new Error('LINE SDK 載入失敗');
         }
-      );
 
-      message.textContent =
-        '資料已送出！請稍候確認會員資料是否成功寫入。';
+        message.textContent = '正在初始化 LINE...';
 
-    } catch (error) {
-      message.textContent = '傳送失敗：' + error.message;
-      submitButton.disabled = false;
+        await liff.init({
+          liffId: LIFF_ID,
+          withLoginOnExternalBrowser: true
+        });
+
+        if (!liff.isLoggedIn()) {
+          message.textContent = '尚未登入 LINE，請重新開啟。';
+          return;
+        }
+
+        const profile = await liff.getProfile();
+
+        if (!profile || !profile.userId) {
+          throw new Error('無法取得 LINE User ID');
+        }
+
+        lineUserId = profile.userId;
+
+        message.textContent =
+          'LINE 登入成功！請填寫會員資料。';
+
+        submitButton.disabled = false;
+
+      } catch (error) {
+        console.error('LIFF Error:', error);
+        message.textContent =
+          'LINE 連線失敗：' + error.message;
+      }
     }
-  });
+
+    document.getElementById('registerForm')
+      .addEventListener('submit', async function(event) {
+
+        event.preventDefault();
 
         if (!lineUserId) {
-          message.textContent = '尚未取得 LINE 使用者資料。';
+          message.textContent =
+            '尚未取得 LINE 使用者資料。';
           return;
         }
 
         const data = {
-          lineUserId,
+          lineUserId: lineUserId,
           name: document.getElementById('name').value.trim(),
           email: document.getElementById('email').value.trim(),
           phone: document.getElementById('phone').value.trim(),
           position: document.getElementById('position').value.trim()
         };
 
-        message.textContent = '會員資料準備完成，下一步連接 Google Sheets。';
+        if (!data.name || !data.email ||
+            !data.phone || !data.position) {
+          message.textContent = '請完整填寫所有資料。';
+          return;
+        }
+
+        submitButton.disabled = true;
+        message.textContent = '會員資料傳送中...';
+
+        try {
+          const formData = new URLSearchParams();
+          formData.append('payload', JSON.stringify(data));
+
+          await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: formData
+          });
+
+          message.textContent =
+            '資料已送出，請確認 Google Sheets。';
+
+        } catch (error) {
+          console.error(error);
+          message.textContent =
+            '傳送失敗：' + error.message;
+          submitButton.disabled = false;
+        }
       });
 
     initializeLiff();
