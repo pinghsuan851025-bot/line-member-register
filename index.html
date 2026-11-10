@@ -105,9 +105,52 @@
       }
     }
 
-    document.getElementById('registerForm')
-      .addEventListener('submit', async function(event) {
-        event.preventDefault();
+document.getElementById('registerForm')
+  .addEventListener('submit', async function(event) {
+    event.preventDefault();
+
+    if (!lineUserId) {
+      message.textContent = '尚未取得 LINE 使用者資料。';
+      return;
+    }
+
+    const data = {
+      lineUserId,
+      name: document.getElementById('name').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      phone: document.getElementById('phone').value.trim(),
+      position: document.getElementById('position').value.trim()
+    };
+
+    if (!data.name || !data.email || !data.phone || !data.position) {
+      message.textContent = '請完整填寫所有資料。';
+      return;
+    }
+
+    submitButton.disabled = true;
+    message.textContent = '會員資料傳送中...';
+
+    try {
+      const formData = new URLSearchParams();
+      formData.append('payload', JSON.stringify(data));
+
+      await fetch(
+        'https://script.google.com/macros/s/AKfycbwemprjyDop7k2qApymXTR1L-sa9nQN0rNIL6o-kt-EO4McSEKoanFjzacj2RDmdCAFhw/exec',
+        {
+          method: 'POST',
+          mode: 'no-cors',
+          body: formData
+        }
+      );
+
+      message.textContent =
+        '資料已送出！請稍候確認會員資料是否成功寫入。';
+
+    } catch (error) {
+      message.textContent = '傳送失敗：' + error.message;
+      submitButton.disabled = false;
+    }
+  });
 
         if (!lineUserId) {
           message.textContent = '尚未取得 LINE 使用者資料。';
