@@ -1,195 +1,484 @@
 
-const LIFF_ID = '2012517863-3AFi25Mo';
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="format-detection" content="telephone=no">
+  <title>會員註冊</title>
 
-const SCRIPT_URL =
-  'https://script.google.com/macros/s/AKfycbwemprjyDop7k2qApymXTR1L-sa9nQN0rNIL6o-kt-EO4McSEKoanFjzacj2RDmdCAFhw/exec';
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-const message = document.getElementById('message');
-const submitButton = document.getElementById('submitButton');
-
-let lineUserId = '';
-let isRegistered = false;
-
-// 查詢 Google Sheets 是否已有會員資料
-function lookupMember() {
-  return new Promise((resolve, reject) => {
-    const callbackName = 'handleMemberLookup';
-    const script = document.createElement('script');
-
-    let finished = false;
-
-    function cleanup() {
-      if (finished) return;
-      finished = true;
-      clearTimeout(timeout);
-      delete window[callbackName];
-      script.remove();
+  <style>
+    * {
+      box-sizing: border-box;
     }
 
-    window[callbackName] = function(result) {
-      cleanup();
+    body {
+      font-family: Arial, "Noto Sans TC", sans-serif;
+      background: #F5F1E9;
+      margin: 0;
+      padding: 22px;
+      color: #514638;
+    }
 
-      if (!result.success) {
-        reject(new Error(result.message || '會員查詢失敗'));
-        return;
+    .container {
+      max-width: 450px;
+      margin: 30px auto;
+      background: #FFFEFC;
+      padding: 30px 25px;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(90,75,55,0.08);
+      border: 1px solid #E8DFD1;
+    }
+
+    h2 {
+      text-align: center;
+      color: #78664C;
+      font-weight: 500;
+      letter-spacing: 3px;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      margin-top: 18px;
+      font-weight: 600;
+      color: #665947;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      margin-top: 7px;
+      border: 1px solid #DDD3C4;
+      border-radius: 7px;
+      font-size: 16px;
+      background: #FFFEFC;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #B59A6A;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      margin-top: 28px;
+      background: #8B7655;
+      color: white;
+      border: none;
+      border-radius: 7px;
+      font-size: 16px;
+      letter-spacing: 2px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background: #B8AE9F;
+      cursor: not-allowed;
+    }
+
+    #message {
+      margin-top: 15px;
+      padding: 12px;
+      background: #F5F1E9;
+      border-radius: 7px;
+      text-align: center;
+      color: #78664C;
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+
+    .member-note {
+      display: none;
+      margin-top: 12px;
+      color: #927A50;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    #successPage {
+      display: none;
+      text-align: center;
+      padding: 18px 5px 25px;
+    }
+
+    .success-icon {
+      width: 82px;
+      height: 82px;
+      margin: 0 auto 25px;
+      border: 1px solid #BBA477;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #927A50;
+      font-size: 42px;
+      font-weight: 300;
+    }
+
+    .success-en {
+      font-size: 18px;
+      letter-spacing: 2px;
+      color: #78664C;
+      margin-bottom: 13px;
+    }
+
+    .success-title {
+      font-size: 27px;
+      letter-spacing: 4px;
+      color: #927A50;
+      margin-bottom: 25px;
+    }
+
+    .success-divider {
+      width: 65px;
+      height: 1px;
+      background: #C9B58F;
+      margin: 0 auto 25px;
+    }
+
+    .success-welcome {
+      font-size: 19px;
+      color: #514638;
+      margin-bottom: 18px;
+    }
+
+    .success-description {
+      color: #766B5E;
+      line-height: 2;
+      font-size: 15px;
+      margin-bottom: 25px;
+    }
+
+    .success-label {
+      display: inline-block;
+      padding: 9px 25px;
+      border: 1px solid #C9B58F;
+      border-radius: 30px;
+      color: #927A50;
+      font-size: 14px;
+      letter-spacing: 2px;
+    }
+
+    .success-footer {
+      margin-top: 30px;
+      font-size: 12px;
+      color: #A08F78;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <!-- 會員註冊及資料修改頁面 -->
+    <div id="registerPage">
+
+      <h2>會員註冊</h2>
+
+      <div id="message">正在連接 LINE...</div>
+
+      <div id="memberNote" class="member-note">
+        歡迎回來！您可以修改以下會員資料。
+      </div>
+
+      <form id="registerForm">
+
+        <label for="name">姓名</label>
+        <input type="text" id="name" required>
+
+        <label for="email">Email</label>
+        <input type="email" id="email" required>
+
+        <label for="phone">聯絡電話</label>
+        <input type="tel" id="phone" required>
+
+        <label for="position">職稱</label>
+        <input type="text" id="position" required>
+
+        <button type="submit" id="submitButton" disabled>
+          載入中...
+        </button>
+
+      </form>
+    </div>
+
+    <!-- 成功畫面 -->
+    <div id="successPage">
+
+      <div class="success-icon">✓</div>
+
+      <div class="success-en">
+        Registration Completed
+      </div>
+
+      <div class="success-title" id="successTitle">
+        會員註冊成功
+      </div>
+
+      <div class="success-divider"></div>
+
+      <div class="success-welcome">
+        歡迎加入我們
+      </div>
+
+      <div class="success-description" id="successDescription">
+        感謝您的信任與支持。<br>
+        您的會員資料已成功送出，<br>
+        期待未來為您提供更專業、完善的服務。
+      </div>
+
+      <div class="success-label" id="successLabel">
+        會員註冊完成
+      </div>
+
+      <div class="success-footer">
+        Thank you for joining us.
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const LIFF_ID = '2012517863-3AFi25Mo';
+
+    const SCRIPT_URL =
+      'https://script.google.com/macros/s/AKfycbwemprjyDop7k2qApymXTR1L-sa9nQN0rNIL6o-kt-EO4McSEKoanFjzacj2RDmdCAFhw/exec';
+
+    const message = document.getElementById('message');
+    const submitButton = document.getElementById('submitButton');
+
+    let lineUserId = '';
+    let isRegistered = false;
+
+    // 查詢會員資料
+    function lookupMember() {
+      return new Promise((resolve, reject) => {
+
+        const callbackName =
+          'memberCallback_' +
+          Date.now() +
+          '_' +
+          Math.random().toString(36).slice(2);
+
+        const script = document.createElement('script');
+
+        let finished = false;
+        let timeout;
+
+        function cleanup() {
+          if (finished) return;
+
+          finished = true;
+          clearTimeout(timeout);
+          delete window[callbackName];
+          script.remove();
+        }
+
+        window[callbackName] = function(result) {
+          cleanup();
+
+          if (!result || !result.success) {
+            reject(new Error(
+              result?.message || '會員查詢失敗'
+            ));
+            return;
+          }
+
+          resolve(result);
+        };
+
+        script.onerror = function() {
+          cleanup();
+          reject(new Error('無法連接會員資料庫'));
+        };
+
+        timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error('會員查詢逾時，請重新整理頁面'));
+        }, 15000);
+
+        script.src =
+          SCRIPT_URL +
+          '?lineUserId=' + encodeURIComponent(lineUserId) +
+          '&callback=' + callbackName;
+
+        document.body.appendChild(script);
+      });
+    }
+
+    // 初始化 LINE 並查詢會員
+    async function initializeLiff() {
+      try {
+
+        if (typeof liff === 'undefined') {
+          throw new Error('LINE SDK 載入失敗');
+        }
+
+        message.textContent = '正在初始化 LINE...';
+
+        await liff.init({
+          liffId: LIFF_ID,
+          withLoginOnExternalBrowser: true
+        });
+
+        if (!liff.isLoggedIn()) {
+          message.textContent =
+            '尚未登入 LINE，請重新開啟。';
+          return;
+        }
+
+        const profile = await liff.getProfile();
+
+        if (!profile || !profile.userId) {
+          throw new Error('無法取得 LINE User ID');
+        }
+
+        lineUserId = profile.userId;
+
+        message.textContent = '正在查詢會員資料...';
+
+        const result = await lookupMember();
+
+        isRegistered = result.registered;
+
+        if (isRegistered) {
+
+          // 自動填入已註冊會員資料
+          document.getElementById('name').value =
+            result.data.name || '';
+
+          document.getElementById('email').value =
+            result.data.email || '';
+
+          document.getElementById('phone').value =
+            result.data.phone || '';
+
+          document.getElementById('position').value =
+            result.data.position || '';
+
+          message.textContent =
+            '您已經是會員！';
+
+          document.getElementById('memberNote').style.display =
+            'block';
+
+          submitButton.textContent = '更新會員資料';
+
+        } else {
+
+          message.textContent =
+            'LINE 登入成功！請填寫會員資料。';
+
+          submitButton.textContent = '送出會員註冊';
+        }
+
+        submitButton.disabled = false;
+
+      } catch (error) {
+
+        console.error('LIFF Error:', error);
+
+        message.textContent =
+          '連線或會員查詢失敗：' + error.message;
       }
-
-      resolve(result);
-    };
-
-    script.onerror = function() {
-      cleanup();
-      reject(new Error('無法連接會員資料庫'));
-    };
-
-    const timeout = setTimeout(() => {
-      cleanup();
-      reject(new Error('會員查詢逾時，請重新整理頁面'));
-    }, 15000);
-
-    script.src =
-      SCRIPT_URL +
-      '?lineUserId=' + encodeURIComponent(lineUserId) +
-      '&callback=' + callbackName;
-
-    document.body.appendChild(script);
-  });
-}
-
-// 初始化 LINE
-async function initializeLiff() {
-  try {
-    if (typeof liff === 'undefined') {
-      throw new Error('LINE SDK 載入失敗');
     }
 
-    message.textContent = '正在初始化 LINE...';
+    // 註冊或更新會員資料
+    document.getElementById('registerForm')
+      .addEventListener('submit', async function(event) {
 
-    await liff.init({
-      liffId: LIFF_ID,
-      withLoginOnExternalBrowser: true
-    });
+        event.preventDefault();
 
-    if (!liff.isLoggedIn()) {
-      message.textContent = '尚未登入 LINE，請重新開啟。';
-      return;
-    }
+        if (!lineUserId) {
+          message.textContent =
+            '尚未取得 LINE 使用者資料。';
+          return;
+        }
 
-    const profile = await liff.getProfile();
+        const data = {
+          lineUserId: lineUserId,
+          name: document.getElementById('name').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          phone: document.getElementById('phone').value.trim(),
+          position: document.getElementById('position').value.trim()
+        };
 
-    if (!profile || !profile.userId) {
-      throw new Error('無法取得 LINE User ID');
-    }
+        if (
+          !data.name ||
+          !data.email ||
+          !data.phone ||
+          !data.position
+        ) {
+          message.textContent = '請完整填寫所有資料。';
+          return;
+        }
 
-    lineUserId = profile.userId;
+        submitButton.disabled = true;
+        message.textContent = '會員資料傳送中...';
 
-    message.textContent = '正在查詢會員資料...';
+        try {
 
-    const result = await lookupMember();
+          const formData = new URLSearchParams();
 
-    isRegistered = result.registered;
+          formData.append(
+            'payload',
+            JSON.stringify(data)
+          );
 
-    if (isRegistered) {
-      // 自動帶入已註冊會員資料
-      document.getElementById('name').value =
-        result.data.name || '';
+          await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: formData
+          });
 
-      document.getElementById('email').value =
-        result.data.email || '';
+          // 顯示註冊或更新完成畫面
+          if (isRegistered) {
 
-      document.getElementById('phone').value =
-        result.data.phone || '';
+            document.getElementById('successTitle').textContent =
+              '會員資料更新成功';
 
-      document.getElementById('position').value =
-        result.data.position || '';
+            document.getElementById('successDescription').innerHTML =
+              '您的會員資料已更新。<br>' +
+              '感謝您持續使用我們的服務。<br>' +
+              '期待未來為您提供更專業、完善的服務。';
 
-      message.textContent =
-        '您已經是會員！可以直接修改以下資料。';
+            document.getElementById('successLabel').textContent =
+              '資料更新完成';
 
-      submitButton.textContent = '更新會員資料';
+          } else {
 
-    } else {
-      message.textContent =
-        'LINE 登入成功！請填寫會員資料。';
+            document.getElementById('successTitle').textContent =
+              '會員註冊成功';
+          }
 
-      submitButton.textContent = '送出會員註冊';
-    }
+          document.getElementById('registerPage').style.display =
+            'none';
 
-    submitButton.disabled = false;
+          document.getElementById('successPage').style.display =
+            'block';
 
-  } catch (error) {
-    console.error('LIFF Error:', error);
+        } catch (error) {
 
-    message.textContent =
-      '連線或會員查詢失敗：' + error.message;
-  }
-}
+          console.error(error);
 
-// 送出註冊或更新資料
-document.getElementById('registerForm')
-  .addEventListener('submit', async function(event) {
+          message.textContent =
+            '傳送失敗：' + error.message;
 
-    event.preventDefault();
-
-    if (!lineUserId) {
-      message.textContent = '尚未取得 LINE 使用者資料。';
-      return;
-    }
-
-    const data = {
-      lineUserId: lineUserId,
-      name: document.getElementById('name').value.trim(),
-      email: document.getElementById('email').value.trim(),
-      phone: document.getElementById('phone').value.trim(),
-      position: document.getElementById('position').value.trim()
-    };
-
-    if (!data.name || !data.email ||
-        !data.phone || !data.position) {
-      message.textContent = '請完整填寫所有資料。';
-      return;
-    }
-
-    submitButton.disabled = true;
-    message.textContent = '會員資料傳送中...';
-
-    try {
-      const formData = new URLSearchParams();
-      formData.append('payload', JSON.stringify(data));
-
-      await fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: formData
+          submitButton.disabled = false;
+        }
       });
 
-      // 依照原本會員狀態顯示不同成功訊息
-      if (isRegistered) {
-        document.querySelector('.success-title').textContent =
-          '會員資料更新成功';
+    // 啟動
+    initializeLiff();
 
-        document.querySelector('.success-description').innerHTML =
-          '您的會員資料已更新。<br>' +
-          '感謝您持續使用我們的服務。<br>' +
-          '期待未來為您提供更專業、完善的服務。';
+  </script>
 
-        document.querySelector('.success-label').textContent =
-          '資料更新完成';
-
-      } else {
-        document.querySelector('.success-title').textContent =
-          '會員註冊成功';
-      }
-
-      document.getElementById('registerPage').style.display = 'none';
-      document.getElementById('successPage').style.display = 'block';
-
-    } catch (error) {
-      console.error(error);
-
-      message.textContent = '傳送失敗：' + error.message;
-      submitButton.disabled = false;
-    }
-  });
-
-initializeLiff();
+</body>
+</html>
